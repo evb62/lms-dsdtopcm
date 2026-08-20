@@ -1,0 +1,24 @@
+[% PROCESS settings/header.html %]
+
+<div class="prefBlock">
+
+	<div class="prefName">[% "PLUGIN_DSDTRANSCODE_PLAYER_OVERRIDE" | string %]</div>
+	<div class="prefInput">
+		<select name="pref_rateOverride">
+			<option value="" [% IF !prefs.pref_rateOverride %]selected="selected"[% END %]>[% "PLUGIN_DSDTRANSCODE_USE_DEFAULT" | string %]</option>
+			[% FOREACH r IN [ ['88200', '88.2 kHz'], ['176400', '176.4 kHz'], ['352800', '352.8 kHz'] ] %]
+				<option value="[% r.0 %]" [% IF prefs.pref_rateOverride == r.0 %]selected="selected"[% END %]>[% r.1 %]</option>
+			[% END %]
+		</select>
+		<span class="prefDesc">[% "PLUGIN_DSDTRANSCODE_PLAYER_OVERRIDE_DESC" | string %]</span>
+	</div>
+
+	<div class="prefName">[% "PLUGIN_DSDTRANSCODE_PLAYER_GAIN" | string %]</div>
+	<div class="prefInput">
+		<input type="text" name="pref_gainOverride" value="[% prefs.pref_gainOverride %]" size="4" placeholder="-3" />
+		<span class="prefDesc">[% "PLUGIN_DSDTRANSCODE_PLAYER_GAIN_DESC" | string %]</span>
+	</div>
+
+</div>
+
+[% PROCESS settings/footer.html %]

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<extension>
+	<module>Plugins::DSDTranscode::Plugin</module>
+	<name>PLUGIN_DSDTRANSCODE</name>
+	<description>PLUGIN_DSDTRANSCODE_DESC</description>
+	<version>1.0.0</version>
+	<creator>Elon Brisola</creator>
+	<targetApplication>
+		<id>SlimServer</id>
+		<minVersion>9.0.0</minVersion>
+		<maxVersion>*</maxVersion>
+	</targetApplication>
+</extension>

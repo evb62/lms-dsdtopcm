@@ -3,12 +3,11 @@ package Plugins::DSDTranscode::Settings;
 # Server-wide settings page: Settings -> [DSD to PCM Transcoding]
 #
 # Handler pattern mirrors the confirmed-working QueueConsume plugin's
-# PlayerSettings.pm exactly: read/write prefs manually, populate
+# PlayerSettings.pm: read/write prefs manually, populate
 # $paramRef->{prefs}{pref_X} ourselves, and call SUPER::handler() last,
 # purely for the page chrome (topLevelItems / orderedLinks / template
 # rendering) - not relying on the base class's prefs()-driven generic
-# loop, since that path wasn't independently confirmed against a working
-# example the way this one now is.
+# loop.
 
 use strict;
 use warnings;

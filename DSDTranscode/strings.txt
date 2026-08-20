@@ -1,0 +1,47 @@
+PLUGIN_DSDTRANSCODE
+	EN	DSD to PCM Transcoding
+
+PLUGIN_DSDTRANSCODE_DESC
+	EN	Transcodes WavPack-encoded DSD (.wv) files to FLAC on the server at a pinned sample rate, so software volume control works correctly on DSD content.
+
+PLUGIN_DSDTRANSCODE_ENABLED
+	EN	Enable DSD transcoding
+
+PLUGIN_DSDTRANSCODE_ENABLED_DESC
+	EN	Master switch. When off, native DSD/DoP routes are restored and no transcoding rule is installed - equivalent to a full rollback.
+
+PLUGIN_DSDTRANSCODE_DISABLENATIVE
+	EN	Block native DSD / DoP playback
+
+PLUGIN_DSDTRANSCODE_DISABLENATIVE_DESC
+	EN	Disables the WavPack DSD -> DFF and WavPack DSD -> DSF routes server-wide, so no player can ever receive a native-DSD or DoP stream for these files.
+
+PLUGIN_DSDTRANSCODE_DEFAULTRATE
+	EN	Default output sample rate
+
+PLUGIN_DSDTRANSCODE_DEFAULTRATE_DESC
+	EN	Used by any squeezelite player without its own override. Stay within the 44.1kHz family (88.2 / 176.4 / 352.8 kHz) - see the guide for why.
+
+PLUGIN_DSDTRANSCODE_GAIN
+	EN	Headroom (dB)
+
+PLUGIN_DSDTRANSCODE_GAIN_DESC
+	EN	Gain applied before resampling, to keep the resampler's overshoot from clipping. -3 is a reasonable default; 0 for unity gain.
+
+PLUGIN_DSDTRANSCODE_PLAYER
+	EN	DSD to PCM Transcoding
+
+PLUGIN_DSDTRANSCODE_PLAYER_OVERRIDE
+	EN	Sample rate override
+
+PLUGIN_DSDTRANSCODE_PLAYER_OVERRIDE_DESC
+	EN	Overrides the server-wide default for this player only. Leave on "Use default" unless this player needs a different rate than the rest (e.g. while synced, only the sync-group master's setting applies).
+
+PLUGIN_DSDTRANSCODE_PLAYER_GAIN
+	EN	Headroom override (dB)
+
+PLUGIN_DSDTRANSCODE_PLAYER_GAIN_DESC
+	EN	Leave blank to use the server-wide default headroom shown as a placeholder.
+
+PLUGIN_DSDTRANSCODE_USE_DEFAULT
+	EN	Use server default

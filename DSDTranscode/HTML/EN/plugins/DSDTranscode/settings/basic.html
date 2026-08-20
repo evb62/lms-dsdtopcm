@@ -1,0 +1,51 @@
+[% PROCESS settings/header.html %]
+
+<div class="prefBlock">
+
+	<div class="prefDesc">[% "PLUGIN_DSDTRANSCODE_DESC" | string %]</div>
+
+	<div class="prefName">[% "PLUGIN_DSDTRANSCODE_ENABLED" | string %]</div>
+	<div class="prefInput">
+		<input type="checkbox" id="dsdtranscode_enable" name="pref_enabled" value="1" [% IF prefs.pref_enabled %]checked="checked"[% END %] />
+		<span class="prefDesc">[% "PLUGIN_DSDTRANSCODE_ENABLED_DESC" | string %]</span>
+	</div>
+
+	<div id="dsdtranscode_dependents"[% UNLESS prefs.pref_enabled %] class="dsdtranscode-disabled"[% END %]>
+
+		<div class="prefName">[% "PLUGIN_DSDTRANSCODE_DISABLENATIVE" | string %]</div>
+		<div class="prefInput">
+			<input type="checkbox" name="pref_disableNativeDSD" value="1" [% IF prefs.pref_disableNativeDSD %]checked="checked"[% END %] />
+			<span class="prefDesc">[% "PLUGIN_DSDTRANSCODE_DISABLENATIVE_DESC" | string %]</span>
+		</div>
+
+		<div class="prefName">[% "PLUGIN_DSDTRANSCODE_DEFAULTRATE" | string %]</div>
+		<div class="prefInput">
+			<select name="pref_defaultRate">
+				[% FOREACH r IN [ ['88200', '88.2 kHz (recommended)'], ['176400', '176.4 kHz'], ['352800', '352.8 kHz'] ] %]
+					<option value="[% r.0 %]" [% IF prefs.pref_defaultRate == r.0 %]selected="selected"[% END %]>[% r.1 %]</option>
+				[% END %]
+			</select>
+			<span class="prefDesc">[% "PLUGIN_DSDTRANSCODE_DEFAULTRATE_DESC" | string %]</span>
+		</div>
+
+		<div class="prefName">[% "PLUGIN_DSDTRANSCODE_GAIN" | string %]</div>
+		<div class="prefInput">
+			<input type="text" name="pref_gain" value="[% prefs.pref_gain %]" size="4" />
+			<span class="prefDesc">[% "PLUGIN_DSDTRANSCODE_GAIN_DESC" | string %]</span>
+		</div>
+
+	</div>
+
+</div>
+
+<style>
+.dsdtranscode-disabled { opacity: 0.4; pointer-events: none; }
+</style>
+
+<script type="text/javascript">
+document.getElementById('dsdtranscode_enable').addEventListener('change', function() {
+	document.getElementById('dsdtranscode_dependents').className = this.checked ? '' : 'dsdtranscode-disabled';
+});
+</script>
+
+[% PROCESS settings/footer.html %]

@@ -1,8 +1,8 @@
 # On-the-fly DSD to PCM transcoding for Lyrion Music Server (LMS)
 
-Background: a music library where some parts are in PCM audio (FLAC, for instance), others are in DSD audio (DSD compressed to WavPack/wv). There is no software volume control in Lyrion for DSD.
+Background: a music library where some parts are in PCM audio (FLAC, for instance), others are in DSD audio (DSD compressed to WavPack/wv). Direct Stream Digital is the format used in Super Audio CDs. There is no software volume control in Lyrion for DSD.
 
-This plugin provides on-the-fly transcoding of DSD files compressed in WavPack to PCM, enabling use of software volume control. After installing the plugin, other settings will be available in the Player WebUI -> Extra Settings.
+This plugin provides on-the-fly transcoding of DSD files compressed in WavPack to PCM. PCM will be streamed to the player, instead of DSD, enabling use of software volume control. After installing the plugin, other settings will be available in the Player WebUI -> Extra Settings.
 
 Enabled per player, in the web UI.
 

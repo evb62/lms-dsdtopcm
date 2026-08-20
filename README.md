@@ -1,0 +1,22 @@
+# On-the-fly DSD to PCM transcoding for Lyrion Music Server (LMS)
+
+Background: a music library where some parts are in PCM audio (FLAC, for instance), others are in DSD audio (DSD compressed to WavPack/wv). There is no software volume control in Lyrion for DSD.
+
+This plugin provides on-the-fly transcoding of DSD files compressed in WavPack to PCM, enabling use of software volume control. After installing the plugin, other settings will be available in the Player WebUI -> Extra Settings.
+
+Enabled per player, in the web UI.
+
+## Installation
+
+Scroll to the end of the "Manage Plugins" page in the LMS WebUI. Find the "Additional Repositories" and fill the line with the repository address: https://raw.githubusercontent.com/evb62/lms-plugins/main/public.xml.
+
+Accept the restart prompt, then enable the plugin.
+
+## Use
+
+(Material Skin)
+
+Settings -> Player -> pick the player -> Extra Settings -> DSD Transcode -> tick the box.
+
+- Sample rate override: Overrides the server-wide default for this player only. Leave on "Use default" unless this player needs a different rate than the rest (e.g. while synced, only the sync-group master's setting applies).
+- Headroom (dB): Gain applied before resampling, to keep the resampler's overshoot from clipping. -3 is a reasonable default; 0 for unity gain.

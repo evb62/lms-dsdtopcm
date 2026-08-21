@@ -159,8 +159,11 @@ sub rebuildFor {
 	# model() is defined per concrete player subclass (Client.pm's own
 	# modelName() is a stub) - confirmed the field exists and is what
 	# gets snapshotted into per-client server prefs in initPrefs().
-	return unless eval { $client->model eq MODEL };
-
+	if (!eval { $client->model eq MODEL }) {
+    $log->warn("Could not determine model for client " . $client->id);
+    return;
+    }
+	
 	my $mac = lc($client->id);
 
 	unless ($prefs->get('enabled')) {

@@ -36,7 +36,8 @@ use Plugins::DSDTranscode::Settings::Player;
 
 my $log = Plugins::DSDTranscode::Log::get();
 
-our $VERSION = '1.0.3';
+# Optional: Read version from install.xml if needed for debugging
+# our $VERSION = '1.0.3';  # REMOVED - version managed in install.xml only
 
 # preferences('server') and $prefs->client($client) are confirmed patterns -
 # both are used this exact way inside TranscodingHelper.pm and Client.pm.

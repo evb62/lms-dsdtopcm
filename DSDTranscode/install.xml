@@ -3,7 +3,7 @@
 	<module>Plugins::DSDTranscode::Plugin</module>
 	<name>PLUGIN_DSDTRANSCODE</name>
 	<description>PLUGIN_DSDTRANSCODE_DESC</description>
-	<version>1.0.1</version>
+	<version>1.0.2</version>
 	<creator>Elon Brisola</creator>
 	<targetApplication>
 		<id>SlimServer</id>

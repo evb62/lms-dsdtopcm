@@ -22,7 +22,7 @@ use Plugins::DSDTranscode::TranscodingRules;
 my $prefs = preferences('plugin.dsdtranscode');
 
 sub name        { 'PLUGIN_DSDTRANSCODE' }
-sub page        { 'plugins/DSDTranscode/settings/basic.html' }
+sub page        { 'DSDTranscode/settings/basic.html' }
 sub needsClient { 0 }
 
 sub handler {

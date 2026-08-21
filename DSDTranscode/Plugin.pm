@@ -17,7 +17,7 @@ use Plugins::DSDTranscode::TranscodingRules;
 use Plugins::DSDTranscode::Settings;
 use Plugins::DSDTranscode::Settings::Player;
 
-our $VERSION = '1.0.0';
+our $VERSION = '1.0.1';
 
 # Registers the 'plugin.dsdtranscode' log category. addLogCategory()
 # returns a usable logger handle in current LMS - same idiom as most
@@ -82,6 +82,21 @@ sub _onClientNew {
 	my $client  = $request->client || return;
 
 	Plugins::DSDTranscode::TranscodingRules::rebuildFor($client);
+}
+
+# Best-effort cleanup on removal. NOT CONFIRMED against source whether
+# PluginManager actually calls shutdownPlugin() before an uninstall (as
+# opposed to only on a plain disable, or not at all before rmtree) - this
+# is a safety net, not something to rely on. The real defense is manual:
+# uncheck "Enable DSD transcoding" on the settings page and restart
+# *before* removing the plugin, so init()'s own disable path (already
+# tested and confirmed working) restores everything cleanly first. If
+# that step gets skipped, native DSD/DoP playback will stay broken after
+# removal until wvpx->dsf / wvpx->dff are manually re-enabled on
+# Settings -> Advanced -> File Types, regardless of whether this hook
+# fires.
+sub shutdownPlugin {
+	Plugins::DSDTranscode::TranscodingRules::teardown();
 }
 
 1;

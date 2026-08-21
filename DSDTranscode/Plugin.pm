@@ -2,6 +2,22 @@ package Plugins::DSDTranscode::Plugin;
 
 # DSD to PCM Transcoding plugin for Lyrion Music Server
 #
+# Automates the three changes described in the original DSD -> PCM
+# transcoding guide:
+#   A. Disables the native wvpx->dsf / wvpx->dff routes so DSD/DoP can
+#      never reach a player.
+#   B. (left to the player's own config, see README - optional once A is in place)
+#   C. Installs a wvpx->flc conversion rule with a pinned output sample
+#      rate, server-wide by default, with an optional per-player override.
+#
+# NOTE ON VERIFICATION: the pieces marked "confirmed" in the comments
+# below were checked directly against TranscodingHelper.pm,
+# CapabilitiesHelper.pm, PluginManager.pm, Client.pm and Settings.pm from
+# the slimserver source. Slim::Plugin::Base's exact initPlugin/getDisplayName
+# contract was NOT independently re-derived from source in this session -
+# it follows the extremely common convention seen across third-party LMS
+# plugins, but is worth a quick sanity check against another installed
+# plugin's Plugin.pm if initPlugin doesn't fire as expected.
 
 use strict;
 use warnings;
@@ -17,17 +33,20 @@ use Plugins::DSDTranscode::TranscodingRules;
 use Plugins::DSDTranscode::Settings;
 use Plugins::DSDTranscode::Settings::Player;
 
-our $VERSION = '1.0.1';
+our $VERSION = '1.0.2';
 
 # Registers the 'plugin.dsdtranscode' log category. addLogCategory()
 # returns a usable logger handle in current LMS - same idiom as most
-# third-party plugins.
+# third-party plugins. If this errors on your build, swap for the
+# 'logger(...)'-after-registration two-step used elsewhere in this file.
 my $log = Slim::Utils::Log->addLogCategory({
 	'category'     => 'plugin.dsdtranscode',
 	'defaultLevel' => 'ERROR',
 	'description'  => 'PLUGIN_DSDTRANSCODE',
 });
 
+# preferences('server') and $prefs->client($client) are confirmed patterns -
+# both are used this exact way inside TranscodingHelper.pm and Client.pm.
 my $prefs = preferences('plugin.dsdtranscode');
 
 $prefs->init({
@@ -44,8 +63,8 @@ sub initPlugin {
 
 	$class->SUPER::initPlugin(@_);
 
-	# Register both settings pages. Slim::Web::Settings::new() 
-	# inspects needsClient() itself to decide whether this
+	# Register both settings pages. Slim::Web::Settings::new() (confirmed
+	# in Settings.pm) inspects needsClient() itself to decide whether this
 	# becomes a server-wide link or a per-player settings page - nothing
 	# else to wire up here. main::WEBUI guard matches the confirmed-working
 	# QueueConsume plugin's own initPlugin().

@@ -11,7 +11,7 @@ sub get {
     unless ($log) {
         $log = Slim::Utils::Log->addLogCategory({
             'category'     => 'plugin.dsdtranscode',
-            'defaultLevel' => 'ERROR',
+            'defaultLevel' => 'WARN',
             'description'  => 'PLUGIN_DSDTRANSCODE',
         });
     }

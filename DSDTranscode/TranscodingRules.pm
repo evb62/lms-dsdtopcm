@@ -33,8 +33,10 @@ use Slim::Utils::Prefs;
 use Slim::Player::TranscodingHelper;
 use Slim::Player::Client;
 
-my $log   = logger('plugin.dsdtranscode');
+use Plugins::DSDTranscode::Log;
+
 my $prefs = preferences('plugin.dsdtranscode');
+my $log = Plugins::DSDTranscode::Log::get();
 
 use constant SRC   => 'wvpx';   # WavPack containing DSD - confirmed in original guide sec. 5.1
 use constant DST   => 'flc';

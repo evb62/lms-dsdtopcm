@@ -29,21 +29,14 @@ use Slim::Utils::Prefs;
 use Slim::Control::Request;
 use Slim::Player::Client;
 
+use Plugins::DSDTranscode::Log;
 use Plugins::DSDTranscode::TranscodingRules;
 use Plugins::DSDTranscode::Settings;
 use Plugins::DSDTranscode::Settings::Player;
 
-our $VERSION = '1.0.2';
+my $log = Plugins::DSDTranscode::Log::get();
 
-# Registers the 'plugin.dsdtranscode' log category. addLogCategory()
-# returns a usable logger handle in current LMS - same idiom as most
-# third-party plugins. If this errors on your build, swap for the
-# 'logger(...)'-after-registration two-step used elsewhere in this file.
-my $log = Slim::Utils::Log->addLogCategory({
-	'category'     => 'plugin.dsdtranscode',
-	'defaultLevel' => 'ERROR',
-	'description'  => 'PLUGIN_DSDTRANSCODE',
-});
+our $VERSION = '1.0.3';
 
 # preferences('server') and $prefs->client($client) are confirmed patterns -
 # both are used this exact way inside TranscodingHelper.pm and Client.pm.

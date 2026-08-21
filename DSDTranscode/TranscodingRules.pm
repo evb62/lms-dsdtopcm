@@ -31,6 +31,7 @@ use warnings;
 use Slim::Utils::Log;
 use Slim::Utils::Prefs;
 use Slim::Player::TranscodingHelper;
+use Slim::Player::Client;
 
 my $log   = logger('plugin.dsdtranscode');
 my $prefs = preferences('plugin.dsdtranscode');
@@ -128,6 +129,26 @@ sub _removeProfile {
 
 	delete $Slim::Player::TranscodingHelper::commandTable{$profile};
 	delete $Slim::Player::TranscodingHelper::capabilities{$profile};
+}
+
+# Best-effort cleanup for when the plugin is being removed, not just
+# disabled via its own "enabled" checkbox. NOT gated on the 'enabled'
+# pref - this always restores native DSD/DoP and removes every profile
+# this plugin may have installed, including per-player overrides, since
+# by this point the plugin's own settings pages won't be reachable to
+# undo anything by hand.
+sub teardown {
+	my $serverPrefs = preferences('server');
+
+	_restoreNativeRoutes($serverPrefs);
+	_removeProfile(MODEL, '*');
+
+	for my $client (Slim::Player::Client::clients()) {
+		next unless eval { $client->model eq MODEL };
+		_removeProfile(MODEL, lc($client->id));
+	}
+
+	main::INFOLOG && $log->is_info && $log->info('DSDTranscode teardown complete');
 }
 
 # Called from Plugin.pm on every new/reconnected client, and from the

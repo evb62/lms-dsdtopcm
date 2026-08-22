@@ -1,23 +1,16 @@
 package Plugins::DSDTranscode::Plugin;
 
-# DSD to PCM Transcoding plugin for Lyrion Music Server
+# On-the-fly DSD -> PCM transcoding for Lyrion Music Server.
 #
-# Automates the three changes described in the original DSD -> PCM
-# transcoding guide:
-#   A. Disables the native wvpx->dsf / wvpx->dff routes so DSD/DoP can
-#      never reach a player.
-#   B. (left to the player's own config, see README - optional once A is in place)
-#   C. Installs a wvpx->flc conversion rule with a pinned output sample
-#      rate, server-wide by default, with an optional per-player override.
+# WavPack-compressed DSD files (.wv) are transcoded to FLAC on the server at
+# a pinned output sample rate, so that software volume control works on DSD
+# content. Two things are set up:
 #
-# NOTE ON VERIFICATION: the pieces marked "confirmed" in the comments
-# below were checked directly against TranscodingHelper.pm,
-# CapabilitiesHelper.pm, PluginManager.pm, Client.pm and Settings.pm from
-# the slimserver source. Slim::Plugin::Base's exact initPlugin/getDisplayName
-# contract was NOT independently re-derived from source in this session -
-# it follows the extremely common convention seen across third-party LMS
-# plugins, but is worth a quick sanity check against another installed
-# plugin's Plugin.pm if initPlugin doesn't fire as expected.
+#   A. The native wvpx->dsf / wvpx->dff routes are disabled, so DSD/DoP can
+#      never reach a player directly from these files.
+#   B. A wvpx->flc conversion rule is installed at a fixed sample rate,
+#      server-wide by default, with an optional per-player override.
+#
 
 use strict;
 use warnings;
@@ -36,18 +29,15 @@ use Plugins::DSDTranscode::Settings::Player;
 
 my $log = Plugins::DSDTranscode::Log::get();
 
-# Optional: Read version from install.xml if needed for debugging
-# our $VERSION = '1.0.3';  # REMOVED - version managed in install.xml only
-
-# preferences('server') and $prefs->client($client) are confirmed patterns -
-# both are used this exact way inside TranscodingHelper.pm and Client.pm.
+# Server-wide preferences. Per-player overrides are stored as client prefs
+# and managed by Plugins::DSDTranscode::Settings::Player.
 my $prefs = preferences('plugin.dsdtranscode');
 
 $prefs->init({
-	enabled          => 1,      # master switch - the plugin's own rollback lever
+	enabled          => 1,      # master switch; off = full rollback
 	disableNativeDSD => 1,      # Part A: block wvpx->dsf / wvpx->dff
-	defaultRate      => 88200,  # Part C default, Hz - 88200 / 176400 / 352800
-	gain             => -3,     # dB of headroom, see guide 8.5
+	defaultRate      => 88200,  # Part C default output rate in Hz (88200/176400/352800)
+	gain             => -3,     # headroom in dB applied before resampling
 });
 
 sub getDisplayName { 'PLUGIN_DSDTRANSCODE' }
@@ -57,31 +47,26 @@ sub initPlugin {
 
 	$class->SUPER::initPlugin(@_);
 
-	# Register both settings pages. Slim::Web::Settings::new() (confirmed
-	# in Settings.pm) inspects needsClient() itself to decide whether this
-	# becomes a server-wide link or a per-player settings page - nothing
-	# else to wire up here. main::WEBUI guard matches the confirmed-working
-	# QueueConsume plugin's own initPlugin().
+	# Register the settings pages. Slim::Web::Settings->new() inspects
+	# needsClient() itself to decide whether a page becomes server-wide
+	# (Settings -> Plugins...) or per-player (Settings -> Player -> Extra
+	# Settings), so nothing further needs wiring up here.
 	if (main::WEBUI) {
 		Plugins::DSDTranscode::Settings->new;
 		Plugins::DSDTranscode::Settings::Player->new;
 	}
 
-	# Install/refresh the server-wide default profile and the
-	# disabledformats entries.
+	# Install the server-wide default profile and the disabledformats
+	# entries (or roll everything back when the plugin is disabled).
 	Plugins::DSDTranscode::TranscodingRules::init();
 
-	# Apply to every player already connected when the plugin (re)loads -
-	# covers a server restart with players already online.
+	# Apply the rules to players that are already connected, e.g. after a
+	# server restart with players online.
 	for my $client (Slim::Player::Client::clients()) {
 		Plugins::DSDTranscode::TranscodingRules::rebuildFor($client);
 	}
 
-	# ['client'],['new'] is confirmed: Client::new() calls
-	# Slim::Control::Request::notifyFromArray($client, ['client','new'])
-	# at the end of construction. 'reconnect' is included defensively for
-	# a player that drops and comes back with the same id - remove it if
-	# it turns out not to fire the same handler shape.
+	# Apply the rules to players as they connect or reconnect later.
 	Slim::Control::Request::subscribe(
 		\&_onClientNew,
 		[ ['client'], ['new', 'reconnect'] ],
@@ -97,17 +82,11 @@ sub _onClientNew {
 	Plugins::DSDTranscode::TranscodingRules::rebuildFor($client);
 }
 
-# Best-effort cleanup on removal. NOT CONFIRMED against source whether
-# PluginManager actually calls shutdownPlugin() before an uninstall (as
-# opposed to only on a plain disable, or not at all before rmtree) - this
-# is a safety net, not something to rely on. The real defense is manual:
-# uncheck "Enable DSD transcoding" on the settings page and restart
-# *before* removing the plugin, so init()'s own disable path (already
-# tested and confirmed working) restores everything cleanly first. If
-# that step gets skipped, native DSD/DoP playback will stay broken after
-# removal until wvpx->dsf / wvpx->dff are manually re-enabled on
-# Settings -> Advanced -> File Types, regardless of whether this hook
-# fires.
+# Best-effort cleanup when the plugin is disabled or removed. NOTE: the
+# recommended removal procedure is to uncheck "Enable DSD transcoding" and
+# restart first, so init()'s disable path restores everything cleanly.
+# This hook is a safety net for cases where that step is skipped; it is
+# not guaranteed to run on every uninstall path.
 sub shutdownPlugin {
 	Plugins::DSDTranscode::TranscodingRules::teardown();
 }

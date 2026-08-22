@@ -20,4 +20,4 @@ Server-wide: Settings -> Manage plugins -> DSD Transcode (or go directly to DSD 
 
 Player Settings: Settings -> Player -> pick the player -> Extra Settings -> DSD Transcode
 - Sample rate override: Overrides the server-wide default for this player only. Leave on "Use default" unless this player needs a different rate than the rest (e.g. while synced, only the sync-group master's setting applies). Rates available: 44.1 kHz, 88.2 kHz, 176.4 kHz. DSD transcoding to 192 kHZ could result in hissing audio, so it is not provided.
-- Headroom (dB): Gain applied before resampling, to keep the resampler's overshoot from clipping. -3 is a reasonable default; 0 for unity gain.
+- Headroom (dB): Gain applied before resampling, to keep the resampler's overshoot from clipping. -3 is a reasonable default; 0 for unity gain. Positive values accepted.

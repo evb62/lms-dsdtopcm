@@ -1,10 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+	DSDTranscode - install manifest for Lyrion Music Server.
+
+	module       Perl namespace of the plugin's main module.
+	name/desc    String keys, resolved against strings.txt.
+	version      Bumped on every release; must match the version in the
+	             repository's public.xml entry for updates to be offered.
+	optionsURL   Relative URL of the server-wide settings page. Declaring
+	             this makes LMS show a "Settings" link for the plugin on
+	             Settings -> Server -> Manage Plugins.
+	targetApplication
+	             Supported server range. <id>SlimServer</id> is the LMS id.
+-->
 <extension>
 	<module>Plugins::DSDTranscode::Plugin</module>
 	<name>PLUGIN_DSDTRANSCODE</name>
 	<description>PLUGIN_DSDTRANSCODE_DESC</description>
-	<version>1.0.3</version>
+	<version>1.0.4</version>
 	<creator>Elon Brisola</creator>
+	<optionsURL>plugins/DSDTranscode/settings/basic.html</optionsURL>
 	<targetApplication>
 		<id>SlimServer</id>
 		<minVersion>9.0.0</minVersion>

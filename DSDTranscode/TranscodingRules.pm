@@ -1,29 +1,22 @@
 package Plugins::DSDTranscode::TranscodingRules;
 
-# Builds and installs wvpx->flc transcoding profiles directly into
+# Builds and installs the wvpx->flc transcoding profiles directly into
 # Slim::Player::TranscodingHelper's tables, instead of writing a
 # custom-convert.conf and waiting for a restart.
 #
-# CONFIRMED against the actual TranscodingHelper.pm / CapabilitiesHelper.pm
-# pulled from the slimserver repo:
-#   - %Slim::Player::TranscodingHelper::commandTable and ::capabilities
-#     are plain package 'our' hashes, freely writable from here.
-#   - profile keys are "<src>-<dst>-<model>-<clientid>", clientid
-#     lowercased (loadConversionTables does lc($4) when parsing a file;
-#     we lc($client->id) here to match).
-#   - getConvertCommand2() tries, in this order:
-#       src-dst-model-clientid, src-dst-*-clientid,
-#       src-dst-model-*,        src-dst-*-*
-#     so a per-player entry naturally wins over the model-wide default
-#     without any file-precedence trickery.
+# Notes on the tables we touch:
+#   - %commandTable and %capabilities are package hashes keyed by
+#     "<src>-<dst>-<model>-<clientid>" (clientid lowercased).
+#   - getConvertCommand2() resolves a conversion in this order:
+#       src-dst-model-clientid, src-dst-*-clientid, src-dst-model-*,
+#       src-dst-*-*
+#     so a per-player entry naturally wins over the model-wide default.
 #   - enabledFormat() gates purely on preferences('server')->get('disabledformats'),
-#     with no reference to what the player advertised - so disabling
-#     wvpx-dsf-*-* / wvpx-dff-*-* here is sufficient on its own; a
-#     client-side "-e dsd" is redundant once this is in place, not required.
-#   - the capabilities hash shape (I/F/T/U/D/E keys, T and U holding a
-#     "KEY=value" string) mirrors exactly what _getCapabilities() produces
-#     when parsing a "# FT:{START=--skip=%t}U:{END=--until=%v}D" comment
-#     line from a conf file.
+#     so removing wvpx-dsf-*-* / wvpx-dff-*-* from the enabled formats is
+#     sufficient to block native DSD; no player-side flag is required.
+#   - The capabilities hash uses the same I/F/T/U/D/E keys and
+#     "KEY=value" strings that _getCapabilities() produces from
+#     "# FT:{...}U:{...}D" comment lines in a conf file.
 
 use strict;
 use warnings;
@@ -38,13 +31,14 @@ use Plugins::DSDTranscode::Log;
 my $prefs = preferences('plugin.dsdtranscode');
 my $log = Plugins::DSDTranscode::Log::get();
 
-use constant SRC   => 'wvpx';   # WavPack containing DSD - confirmed in original guide sec. 5.1
+use constant SRC   => 'wvpx';   # WavPack file containing DSD
 use constant DST   => 'flc';
 use constant MODEL => 'squeezelite';
 
-# The two native-DSD destinations to close off (guide sec. 6, row 2 & 3).
+# The two native-DSD destinations we close off.
 use constant NATIVE_ROUTES => ('wvpx-dsf-*-*', 'wvpx-dff-*-*');
 
+# Install or roll back the server-wide rules, depending on the 'enabled' pref.
 sub init {
 	my $serverPrefs = preferences('server');
 
@@ -53,12 +47,13 @@ sub init {
 		_installProfile(MODEL, '*', $prefs->get('defaultRate'), $prefs->get('gain'));
 	}
 	else {
-		# plugin-level rollback: put native DSD routes back and drop our rule
+		# Plugin-level rollback: put native DSD routes back and drop our rule.
 		_restoreNativeRoutes($serverPrefs);
 		_removeProfile(MODEL, '*');
 	}
 }
 
+# Remove the native-DSD destinations from the server's enabled formats.
 sub _disableNativeRoutes {
 	my $serverPrefs = shift;
 
@@ -76,6 +71,7 @@ sub _disableNativeRoutes {
 	$serverPrefs->set('disabledformats', \@disabled) if $changed;
 }
 
+# Restore the native-DSD destinations to the server's enabled formats.
 sub _restoreNativeRoutes {
 	my $serverPrefs = shift;
 
@@ -85,11 +81,10 @@ sub _restoreNativeRoutes {
 	$serverPrefs->set('disabledformats', \@kept);
 }
 
-# Mirrors the sox/wvunpack pipeline from the original guide sec. 8.5,
-# with the target rate and gain substituted in as literals rather than
-# via LMS's own $RESAMPLE$/%d tokens - same reasoning as the guide's own
-# custom-convert.conf rule: we want a fixed rate, not the samplerateLimit
-# LMS would otherwise compute (guide sec. 8.1).
+# The conversion command: decode WavPack to WAV, then re-encode to FLAC at a
+# fixed output rate with the given headroom gain. The rate is a literal
+# (not LMS's $RESAMPLE$ token) so the pinned rate is used regardless of the
+# player's advertised samplerateLimit.
 sub _command {
 	my ($rate, $gain) = @_;
 	$gain = -3 unless defined $gain && $gain ne '';
@@ -99,17 +94,22 @@ sub _command {
 		. '[sox] -q -t wav - -t flac -C 0 -b 24 - gain ' . $gain . ' rate -v -L ' . $rate;
 }
 
+# Capabilities for the profile: START/END (--skip/--until) are passed
+# through to wvunpack; D is declared without a $RESAMPLE$ substitution
+# because the rate is pinned in the command itself (see _command).
 sub _capabilities {
 	return {
 		I => 'noArgs',
 		F => 'noArgs',
 		T => 'START=--skip=%t',
 		U => 'END=--until=%v',
-		D => 'noArgs',   # declared but no $RESAMPLE$ substitution - see guide sec. 8.1
+		D => 'noArgs',
 		E => {},
 	};
 }
 
+# Write a profile entry into TranscodingHelper's tables. The key encodes
+# src-dst-model-clientid; a clientid of '*' means "any player of this model".
 sub _installProfile {
 	my ($model, $clientid, $rate, $gain) = @_;
 
@@ -124,6 +124,7 @@ sub _installProfile {
 	return $profile;
 }
 
+# Remove a profile entry from TranscodingHelper's tables.
 sub _removeProfile {
 	my ($model, $clientid) = @_;
 
@@ -133,12 +134,10 @@ sub _removeProfile {
 	delete $Slim::Player::TranscodingHelper::capabilities{$profile};
 }
 
-# Best-effort cleanup for when the plugin is being removed, not just
-# disabled via its own "enabled" checkbox. NOT gated on the 'enabled'
-# pref - this always restores native DSD/DoP and removes every profile
-# this plugin may have installed, including per-player overrides, since
-# by this point the plugin's own settings pages won't be reachable to
-# undo anything by hand.
+# Full cleanup: restore native DSD routes and drop every profile this plugin
+# may have installed, including per-player overrides. Called when the plugin
+# is disabled or removed, at which point its settings pages are no longer
+# reachable to undo anything by hand. Not gated on the 'enabled' pref.
 sub teardown {
 	my $serverPrefs = preferences('server');
 
@@ -153,19 +152,18 @@ sub teardown {
 	main::INFOLOG && $log->is_info && $log->info('DSDTranscode teardown complete');
 }
 
-# Called from Plugin.pm on every new/reconnected client, and from the
-# player settings page whenever that player's override is saved.
+# (Re)apply the correct profile for one player: install the player-specific
+# override when one is set, otherwise remove any override so the model-wide
+# default applies. Called from Plugin.pm on every new/reconnected client and
+# from the player settings page whenever that player's override is saved.
 sub rebuildFor {
 	my $client = shift or return;
 
-	# model() is defined per concrete player subclass (Client.pm's own
-	# modelName() is a stub) - confirmed the field exists and is what
-	# gets snapshotted into per-client server prefs in initPrefs().
 	if (!eval { $client->model eq MODEL }) {
-    $log->warn("Could not determine model for client " . $client->id);
-    return;
-    }
-	
+		$log->warn("Could not determine model for client " . $client->id);
+		return;
+	}
+
 	my $mac = lc($client->id);
 
 	unless ($prefs->get('enabled')) {
@@ -180,7 +178,7 @@ sub rebuildFor {
 		_installProfile(MODEL, $mac, $override, $clientPrefs->get('gainOverride'));
 	}
 	else {
-		# no override set - fall through to the model-wide default profile
+		# No override set - fall back to the model-wide default profile.
 		_removeProfile(MODEL, $mac);
 	}
 }

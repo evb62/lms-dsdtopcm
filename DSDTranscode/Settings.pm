@@ -1,13 +1,11 @@
 package Plugins::DSDTranscode::Settings;
 
-# Server-wide settings page: Settings -> [DSD to PCM Transcoding]
+# Server-wide settings page (Settings -> Plugins -> DSD to PCM Transcoding).
 #
-# Handler pattern mirrors the confirmed-working QueueConsume plugin's
-# PlayerSettings.pm: read/write prefs manually, populate
-# $paramRef->{prefs}{pref_X} ourselves, and call SUPER::handler() last,
-# purely for the page chrome (topLevelItems / orderedLinks / template
-# rendering) - not relying on the base class's prefs()-driven generic
-# loop.
+# Preferences are read/written manually and exposed to the template as
+# $paramRef->{prefs}{pref_*} instead of relying on the base class's prefs()
+# list; SUPER::handler() is called last purely for the page chrome
+# (settings menu, template rendering).
 
 use strict;
 use warnings;
@@ -21,8 +19,14 @@ use Plugins::DSDTranscode::TranscodingRules;
 
 my $prefs = preferences('plugin.dsdtranscode');
 
+# name/page/needsClient define how the page is registered:
+#   - page is the URL below /plugins/... and must match the template path
+#     relative to HTML/EN (i.e. HTML/EN/plugins/DSDTranscode/settings/basic.html).
+#   - needsClient() = 0 makes this a server-wide page. install.xml's
+#     <optionsURL> points at the same URL, which is what puts the "Settings"
+#     link into the Manage Plugins list.
 sub name        { 'PLUGIN_DSDTRANSCODE' }
-sub page        { 'DSDTranscode/settings/basic.html' }
+sub page        { 'plugins/DSDTranscode/settings/basic.html' }
 sub needsClient { 0 }
 
 sub handler {
@@ -34,15 +38,16 @@ sub handler {
 		$prefs->set('defaultRate',      $paramRef->{pref_defaultRate});
 		$prefs->set('gain',             $paramRef->{pref_gain});
 
+		# Server-wide values changed: reinstall the rules and re-resolve
+		# every connected player in case any of them was using the default.
 		Plugins::DSDTranscode::TranscodingRules::init();
 
-		# server-wide values changed - re-resolve every connected player
-		# in case any of them are still using the model-wide default.
 		for my $c (Slim::Player::Client::clients()) {
 			Plugins::DSDTranscode::TranscodingRules::rebuildFor($c);
 		}
 	}
 
+	# Populate the form with the current values.
 	$paramRef->{prefs}{pref_enabled}          = $prefs->get('enabled');
 	$paramRef->{prefs}{pref_disableNativeDSD} = $prefs->get('disableNativeDSD');
 	$paramRef->{prefs}{pref_defaultRate}      = $prefs->get('defaultRate');

@@ -20,13 +20,13 @@ PLUGIN_DSDTRANSCODE_DEFAULTRATE
 	EN	Default output sample rate
 
 PLUGIN_DSDTRANSCODE_DEFAULTRATE_DESC
-	EN	Used by any squeezelite player without its own override. Stay within the 44.1kHz family (88.2 / 176.4 / 352.8 kHz) - see the guide for why.
+	EN	Used by any squeezelite player without its own override. Stay within the 44.1kHz family (88.2 / 176.4 / 352.8 kHz) - see README.
 
 PLUGIN_DSDTRANSCODE_GAIN
 	EN	Headroom (dB)
 
 PLUGIN_DSDTRANSCODE_GAIN_DESC
-	EN	Gain applied before resampling, to keep the resampler's overshoot from clipping. -3 is a reasonable default; 0 for unity gain.
+	EN	Gain applied before resampling, to keep the resampler's overshoot from clipping. -3 is a reasonable default; 0 for unity gain. Positive values accepted. Beware of clipping.
 
 PLUGIN_DSDTRANSCODE_PLAYER
 	EN	DSD to PCM Transcoding

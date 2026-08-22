@@ -1,13 +1,9 @@
 package Plugins::DSDTranscode::Settings::Player;
 
-# Per-player settings page: Settings -> Player -> [DSD to PCM Transcoding]
+# Per-player settings page (Settings -> Player -> <player> -> Extra Settings).
 #
-# Structure and handler pattern copied directly from the confirmed-working
-# QueueConsume::PlayerSettings.pm: manual prefs get/set, SUPER::handler()
-# called last purely for page chrome. validFor() combines isPlayer() (the
-# check the working reference uses) with our own model check, since our
-# transcoding rule is genuinely squeezelite-specific (unlike QueueConsume,
-# which works for any player).
+# Same manual-prefs pattern as the server-wide page, but reading/writing
+# client-scoped preferences and rebuilding only the affected player's rule.
 
 use strict;
 use warnings;
@@ -20,6 +16,9 @@ use Plugins::DSDTranscode::TranscodingRules;
 
 my $prefs = preferences('plugin.dsdtranscode');
 
+# needsClient() = 1 registers the page under the player settings; validFor()
+# further restricts it to squeezelite players, the only player model we
+# install a transcoding rule for.
 sub name        { 'PLUGIN_DSDTRANSCODE_PLAYER' }
 sub page        { 'plugins/DSDTranscode/settings/player.html' }
 sub needsClient { 1 }
